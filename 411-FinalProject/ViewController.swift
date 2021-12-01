@@ -35,37 +35,39 @@ class ViewController: UIViewController {
     
     //update the tasks
     func updateTasks() {
-        
         //remove all before resetting
         taskLists.removeAll()
         
         guard let count = UserDefaults().value(forKey: "count") as? Int else {
             return
         }
-        
+        //my issue with updating the amount of tasks is in this for loop
         for x in 0..<count {
             if let task = UserDefaults().value(forKey: "task_\(x+1)") as? String {
+                //print("task")
+                //print(task)
                 taskLists.append(task)
             }
         }
-        
         //load new tasks
         tableView.reloadData()
     }
-    func deletedTask() {
-        taskLists.removeAll()
-        
+    func taskRemoved(sending: String) {
+
         guard let count = UserDefaults().value(forKey: "count") as? Int else {
             return
         }
-        
+
+        // if the value in UserDefaults matches what was removed from the array
+        // then remove that (issues with duplicate list titles)
         for x in 0..<count {
-            if let task = UserDefaults().value(forKey: "task_\(x-1)") as? String {
-                taskLists.append(task)
+            if let task = UserDefaults().value(forKey: "task_\(x+1)") as? String {
+                if task == sending {
+                    UserDefaults().removeObject(forKey: "task_\(x+1)")
+                    return
+                }
             }
         }
-        
-        tableView.reloadData()
     }
     
     @IBAction func didTappAdd() {
@@ -79,6 +81,8 @@ class ViewController: UIViewController {
         }
         navigationController?.pushViewController(vc, animated: true)
     }
+    
+    // DELETION
 }
 
 // adding extensions for ViewController
@@ -114,9 +118,15 @@ extension ViewController: UITableViewDataSource {
         if editingStyle == .delete {
             tableView.beginUpdates()
             
+            //delete from the array
+            let sending: String = taskLists[indexPath.row]
+            print(sending)
+            
             taskLists.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
             
+            taskRemoved(sending: sending)
+        
             tableView.endUpdates()
         }
     }
